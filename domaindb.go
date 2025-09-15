@@ -16,6 +16,8 @@ import (
 	"github.com/puzpuzpuz/xsync/v4"
 )
 
+var emptyMap = make(map[string]struct{})
+
 const defaultHttpClientTimeout = 10 * time.Second
 
 type dbUpdate struct {
@@ -607,6 +609,14 @@ func (s *DomainDb) Close() error {
 	close(s.updates)
 
 	s.isRunning = false
+
+	// Assign empty maps to all databases to allow the original ones to be freed by the GC.
+	for _, data := range s.dbs {
+		data.Mu.Lock()
+		data.Domains = emptyMap
+		data.Mu.Unlock()
+	}
+	runtime.GC()
 
 	return nil
 }

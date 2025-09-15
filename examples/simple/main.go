@@ -82,7 +82,7 @@ func main() {
 			},
 
 			DbDisposableFalsePositive: {
-				RefreshInterval: 10 * time.Second,
+				RefreshInterval: 1 * time.Hour,
 				Urls: []*url.URL{
 					// Some whitelists from various sources.
 					mustParseUrl("https://raw.githubusercontent.com/disposable-email-domains/disposable-email-domains/refs/heads/main/allowlist.conf"),
@@ -133,16 +133,16 @@ func main() {
 		fmt.Printf("%s looks disposable: %t, looks like false positive: %t\n", domain, looksDisposable, looksLikeFalsePositive)
 	}
 
+	// In this example, the program terminates.
+	// In real-world usage, the program will continue to run and databases will be updated in the background.
+	// Add `select {}` to the end of the program to leave it open for a few hours to see log messages caused by the automatic updates.
+
+	//select {}
+
 	// Closing the database frees all databases.
 	// The DomainDb instance is no longer usable after closure.
 	err = domainDb.Close()
 	if err != nil {
 		panic(err)
 	}
-
-	// In this example, the program terminates.
-	// In real-world usage, the program will continue to run and databases will be updated in the background.
-	// Add `select {}` to the end of the program to leave it open for a few hours to see log messages caused by the automatic updates.
-
-	select {}
 }
