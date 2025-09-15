@@ -368,6 +368,7 @@ func (s *DomainDb) runUpdater(name string, lastUpdate time.Time, updateInterval 
 		s.logger.Log(ctx, slog.LevelError, "failed to do first scheduled update of database",
 			"service", "domaindb.DomainDb",
 			"database_name", name,
+			"error", err,
 		)
 	}
 
@@ -383,6 +384,7 @@ func (s *DomainDb) runUpdater(name string, lastUpdate time.Time, updateInterval 
 			s.logger.Log(ctx, slog.LevelError, "failed to do scheduled update of database",
 				"service", "domaindb.DomainDb",
 				"database_name", name,
+				"error", err,
 			)
 		}
 	}
@@ -606,16 +608,14 @@ func (s *DomainDb) Close() error {
 
 	s.isRunning = false
 
-	// Dereference databases to allow them to be garbage collected.
-	s.dbs = nil
-
-	// Force garbage collection.
-	runtime.GC()
-
 	return nil
 }
 
 func (s *DomainDb) DoesDbHaveDomain(dbName string, domain string) (bool, error) {
+	if !s.isRunning {
+		return false, ErrDbClosed
+	}
+
 	data, has := s.dbs[dbName]
 	if !has {
 		return false, NewNoSuchDatabaseError(dbName)
