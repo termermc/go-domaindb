@@ -22,7 +22,7 @@ If you specify multiple data sources, the failing sources will be skipped and th
 This library is useful if:
 - You need to prevent spam from disposable email addresses
 - You need to enforce Fediverse instance block lists
-- You don't want to rely on an external service for email data
+- You don't want to rely on an external service for domain data
 - You have strict privacy requirements that prevent using an external service for domain data
 - You need to aggregate multiple domain data sources into a single database
 
