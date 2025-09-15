@@ -82,7 +82,7 @@ func main() {
 			},
 
 			DbDisposableFalsePositive: {
-				RefreshInterval: 1 * time.Hour,
+				RefreshInterval: 10 * time.Second,
 				Urls: []*url.URL{
 					// Some whitelists from various sources.
 					mustParseUrl("https://raw.githubusercontent.com/disposable-email-domains/disposable-email-domains/refs/heads/main/allowlist.conf"),
@@ -144,5 +144,5 @@ func main() {
 	// In real-world usage, the program will continue to run and databases will be updated in the background.
 	// Add `select {}` to the end of the program to leave it open for a few hours to see log messages caused by the automatic updates.
 
-	//select {}
+	select {}
 }
