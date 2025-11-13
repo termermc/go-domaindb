@@ -8,6 +8,15 @@ func newN() *DomainNormalizer {
 	return NewDomainNormalizer()
 }
 
+// Helper to build a repeated character string.
+func makeStr(ch rune, n int) string {
+	b := make([]rune, n)
+	for i := 0; i < n; i++ {
+		b[i] = ch
+	}
+	return string(b)
+}
+
 func TestNormalizeDomain_BasicASCII(t *testing.T) {
 	n := newN()
 
@@ -216,11 +225,26 @@ func TestNormalizeDomain_RemovesTrailingDotOnly(t *testing.T) {
 	}
 }
 
-// Helper to build a repeated character string.
-func makeStr(ch rune, n int) string {
-	b := make([]rune, n)
-	for i := 0; i < n; i++ {
-		b[i] = ch
+func TestNormalizeDomain_SanityCheck(t *testing.T) {
+	n := newN()
+
+	domains := []string{
+		"example.com",
+		"gmail.com",
+		"hotmail.com",
+		"yahoo.com",
+		"live.com",
 	}
-	return string(b)
+
+	// None of these should fail
+	for _, in := range domains {
+		normal, err := n.NormalizeDomain(in)
+		if err != nil {
+			t.Fatalf("unexpected err: %v", err)
+		}
+
+		if normal != in {
+			t.Fatalf("got %q, want %q", normal, in)
+		}
+	}
 }
