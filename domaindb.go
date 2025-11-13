@@ -180,7 +180,9 @@ func NewDomainDb(options Options) (*DomainDb, error) {
 		toClose := make([]io.Closer, 0, len(dbs))
 		defer func() {
 			for _, c := range toClose {
-				_ = c.Close()
+				if c != nil {
+					_ = c.Close()
+				}
 			}
 		}()
 
@@ -549,6 +551,7 @@ func (s *DomainDb) loadDomainsFromReader(reader io.Reader, name string) error {
 	}
 
 	data.Mu.Lock()
+	data.Has = true
 	data.Domains = domains
 	data.Mu.Unlock()
 
