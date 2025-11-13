@@ -2,9 +2,8 @@ package domaindb
 
 import (
 	"io"
-	"strings"
 
-	"golang.org/x/net/idna"
+	"github.com/termermc/go-domaindb/normalize"
 )
 
 type noOpReadCloser struct {
@@ -16,6 +15,9 @@ func (n noOpReadCloser) Close() error {
 }
 
 // NormalizeDomainName normalizes the provided domain name by making it lowercase and converting any non-ASCII characters to ASCII punycode.
+//
+// Deprecated: Use normalize.DomainNormalizer instead.
 func NormalizeDomainName(domain string) (string, error) {
-	return idna.ToASCII(strings.ToLower(domain))
+	n := normalize.NewDomainNormalizer()
+	return n.NormalizeDomain(domain)
 }

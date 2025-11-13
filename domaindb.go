@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/puzpuzpuz/xsync/v4"
+	"github.com/termermc/go-domaindb/normalize"
 )
 
 var emptyMap = make(map[string]struct{})
@@ -51,6 +52,7 @@ type DomainDb struct {
 	disableDl  bool
 	httpClient *http.Client
 	logger     *slog.Logger
+	normalizer *normalize.DomainNormalizer
 	updates    chan dbUpdate
 
 	dbs map[string]*dbSrcMap
@@ -147,6 +149,7 @@ func NewDomainDb(options Options) (*DomainDb, error) {
 		disableDl:  options.DisableDownload,
 		httpClient: httpClient,
 		logger:     logger,
+		normalizer: normalize.NewDomainNormalizer(),
 		updates:    make(chan dbUpdate, 8),
 
 		dbs: dbs,
@@ -526,7 +529,7 @@ func (s *DomainDb) loadDomainsFromReader(reader io.Reader, name string) error {
 		}
 
 		// Normalize the domain before putting it into the map.
-		normalized, err := NormalizeDomainName(line)
+		normalized, err := s.normalizer.NormalizeDomain(line)
 		if err != nil {
 			s.logger.Log(ctx, slog.LevelError, "failed to normalize domain name",
 				"service", "domaindb.DomainDb",
@@ -638,7 +641,7 @@ func (s *DomainDb) DoesDbHaveDomain(dbName string, domain string) (bool, error) 
 		return false, NewNoSuchDatabaseError(dbName)
 	}
 
-	normalized, err := NormalizeDomainName(domain)
+	normalized, err := s.normalizer.NormalizeDomain(domain)
 	if err != nil {
 		return false, err
 	}
