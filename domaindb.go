@@ -624,6 +624,10 @@ func (s *DomainDb) Close() error {
 	return nil
 }
 
+// DoesDbHaveDomain returns whether a domain was found in the specified domain database.
+// If the database does not exist, returns a NoSuchDatabaseError.
+// If the database has not been initialized, returns a NotInitializedError.
+// If the DomainDb instance has been closed, returns ErrDbClosed.
 func (s *DomainDb) DoesDbHaveDomain(dbName string, domain string) (bool, error) {
 	if !s.isRunning {
 		return false, ErrDbClosed
@@ -641,6 +645,10 @@ func (s *DomainDb) DoesDbHaveDomain(dbName string, domain string) (bool, error) 
 
 	tok := data.Mu.RLock()
 	defer data.Mu.RUnlock(tok)
+
+	if !data.Has || data.Domains == nil {
+		return false, NewNotInitializedError(dbName)
+	}
 
 	_, has = data.Domains[normalized]
 	return has, nil
