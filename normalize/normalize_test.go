@@ -117,13 +117,47 @@ func TestNormalizeDomain_AllDotsOrEmptyLabels(t *testing.T) {
 		".",
 		"..",
 		"...",
-		".example.com",
-		"example.com..",
 		"example..com",
 	}
 	for _, in := range invalids {
 		if _, err := n.NormalizeDomain(in); err == nil {
 			t.Fatalf("%q: expected error, got nil", in)
+		}
+	}
+}
+
+func TestNormalizeDomain_StripsLeadingAndTrailingDots(t *testing.T) {
+	n := newN()
+
+	toTrim := []string{
+		"example.com.",
+		".example.com",
+		".example.com.",
+		"example..com..",
+		"example..com.",
+		".example..com.",
+	}
+	expected := []string{
+		"example.com",
+		"example.com",
+		"example.com",
+		"",
+		"",
+		"",
+	}
+	for i, in := range toTrim {
+		exp := expected[i]
+
+		got, err := n.NormalizeDomain(in)
+		if err != nil {
+			if exp == "" {
+				continue
+			}
+
+			t.Fatalf("%q: unexpected err: %v", in, err)
+		}
+		if got != exp {
+			t.Fatalf("%q: got %q, want %q", in, got, exp)
 		}
 	}
 }

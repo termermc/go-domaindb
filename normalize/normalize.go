@@ -74,8 +74,11 @@ func (n *DomainNormalizer) NormalizeDomain(input string) (string, error) {
 		return "", errors.New("domain has no labels")
 	}
 	// Reject any remaining leading/trailing dot
-	if strings.HasPrefix(s, ".") || strings.HasSuffix(s, ".") {
-		return "", errors.New("domain has stray leading/trailing dots")
+	for strings.HasPrefix(s, ".") {
+		s = strings.TrimPrefix(s, ".")
+	}
+	for strings.HasSuffix(s, ".") {
+		s = strings.TrimSuffix(s, ".")
 	}
 	// Reject empty labels like "a..b"
 	if strings.Contains(s, "..") {
