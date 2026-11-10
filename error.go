@@ -21,6 +21,37 @@ var ErrDbClosed = errors.New("domain database closed")
 // ErrDbNameTooLong is returned when a database name exceeds DbNameMaxSize bytes.
 var ErrDbNameTooLong = fmt.Errorf("database name too long, must be at most %d bytes long", DbNameMaxSize)
 
+// ErrDatabaseTooLarge is returned when a database is larger than the maximum database size.
+// See Options.MaxDatabaseSize.
+var ErrDatabaseTooLarge = errors.New("database is too large")
+
+// ErrNoDomains is returned when a domain list contains no domain names.
+// A source that yields an empty list is treated as broken, rather than replacing existing data with nothing.
+var ErrNoDomains = errors.New("domain list contains no domain names")
+
+// ErrInvalidRefreshInterval is returned when a data source's RefreshInterval is not positive while downloading is enabled.
+var ErrInvalidRefreshInterval = errors.New("data source RefreshInterval must be positive")
+
+// ErrInvalidDbName is returned when a database name is empty, reserved or otherwise unusable.
+var ErrInvalidDbName = errors.New("invalid database name")
+
+// ErrFailedByRetryPolicy is returned when a database update was failed by the RetryPolicy returning RetryActionFail.
+// The error also wraps the error of the source that failed.
+var ErrFailedByRetryPolicy = errors.New("database update was failed by the retry policy")
+
+// HttpStatusError is returned when downloading a source yields a response with a status code other than 200.
+type HttpStatusError struct {
+	// The response status code.
+	StatusCode int
+
+	// The start of the response body, which may help explain the error.
+	BodyPreview string
+}
+
+func (err *HttpStatusError) Error() string {
+	return fmt.Sprintf("status code was %d (expected %d): %q", err.StatusCode, 200, err.BodyPreview)
+}
+
 // NotInitializedError is returned when a function is run that required a domain database to be initialized, but it was not initialized.
 // Includes the database name that was required but not initialized.
 type NotInitializedError struct {
@@ -29,10 +60,10 @@ type NotInitializedError struct {
 }
 
 func (err *NotInitializedError) Error() string {
-	return fmt.Sprintf(`domain database "%s" not initialized`, err.Name)
+	return fmt.Sprintf(`domain database %q not initialized`, err.Name)
 }
 
-// NewNotInitializedError creates a new NewNotInitializedError instance with the specified database name.
+// NewNotInitializedError creates a new NotInitializedError instance with the specified database name.
 func NewNotInitializedError(name string) *NotInitializedError {
 	return &NotInitializedError{
 		Name: name,
@@ -47,7 +78,7 @@ type NoSuchDatabaseError struct {
 }
 
 func (err *NoSuchDatabaseError) Error() string {
-	return fmt.Sprintf(`domain database "%s" does not exist`, err.Name)
+	return fmt.Sprintf(`domain database %q does not exist`, err.Name)
 }
 
 // NewNoSuchDatabaseError creates a new NoSuchDatabaseError instance with the specified database name.

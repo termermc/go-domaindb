@@ -3,14 +3,16 @@ package normalize
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 
 	"golang.org/x/net/idna"
 )
 
 // DomainNormalizer normalizes domain names to their canonical form.
-// Note that it rejects domain names with trailing dots and empty labels.
+// Note that it strips leading and trailing dots, and rejects domain names with empty labels.
 // See DomainNormalizer.NormalizeDomain for details.
+// It is safe for concurrent use.
 type DomainNormalizer struct {
 	profile     *idna.Profile
 	dotReplacer *strings.Replacer
@@ -45,7 +47,7 @@ func NewDomainNormalizer() *DomainNormalizer {
 // - Trims surrounding whitespace
 // - Maps Unicode dot-like chars to '.'
 // - Strips default-ignorable zero-width/bidi control chars
-// - Removes a trailing dot
+// - Removes leading and trailing dots
 // - Applies UTS #46 mapping and ASCII (Punycode) conversion
 // - Lowercases output (ASCII)
 // - Validates total (<=253) and label (1..63) lengths and forbids empty labels
@@ -67,13 +69,11 @@ func (n *DomainNormalizer) NormalizeDomain(input string) (string, error) {
 	}
 
 	// Remove a single trailing dot if present (FQDN marker)
-	if strings.HasSuffix(s, ".") {
-		s = strings.TrimSuffix(s, ".")
-	}
+	s = strings.TrimSuffix(s, ".")
 	if s == "" {
 		return "", errors.New("domain has no labels")
 	}
-	// Reject any remaining leading/trailing dot
+	// Strip any remaining leading/trailing dots
 	for strings.HasPrefix(s, ".") {
 		s = strings.TrimPrefix(s, ".")
 	}
@@ -86,11 +86,8 @@ func (n *DomainNormalizer) NormalizeDomain(input string) (string, error) {
 	}
 
 	// Reject empty labels like "a..b"
-	parts := strings.Split(s, ".")
-	for _, p := range parts {
-		if p == "" {
-			return "", errors.New("domain contains empty label")
-		}
+	if slices.Contains(strings.Split(s, "."), "") {
+		return "", errors.New("domain contains empty label")
 	}
 
 	// UTS #46 to ASCII (punycode) using the prepared profile
@@ -101,8 +98,7 @@ func (n *DomainNormalizer) NormalizeDomain(input string) (string, error) {
 	ascii = strings.ToLower(ascii)
 
 	// Enforce label and total length constraints
-	labels := strings.Split(ascii, ".")
-	for _, lbl := range labels {
+	for lbl := range strings.SplitSeq(ascii, ".") {
 		if l := len(lbl); l == 0 || l > 63 {
 			return "", fmt.Errorf("label %q length %d out of range 1..63", lbl, len(lbl))
 		}
@@ -159,7 +155,7 @@ func isLDHOrPunycode(lbl string) bool {
 	if !isAlnum(lbl[0]) && !strings.HasPrefix(lbl, "xn--") {
 		return false
 	}
-	for i := 0; i < l; i++ {
+	for i := range l {
 		c := lbl[i]
 		if (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-' {
 			continue

@@ -47,6 +47,7 @@ If you have initialized a `DomainDb` with a database named "disposable", you can
 ```go
 domain := "10minutesmail.com"
 
+// Also see domaindb.DoesDbHaveDomainWithOptions.
 isDisposable, err := domainDb.DoesDbHaveDomain("disposable", domain)
 if err != nil {
 	panic(err)
@@ -59,8 +60,11 @@ if isDisposable {
 
 ## Obtaining Database Files
 
-You can find many different domain lists for different purposes online. The only requirement is that lists are newline-separated and contain a domain per line.
-Blank lines and lines starting with `#` are also ignored.
+You can find many different domain lists for different purposes online. The only requirement is that lists are
+newline-separated and contain a domain per line.
+Blank lines and lines starting with `#` are ignored.
+Domains are normalized (lowercased, with Unicode converted to Punycode) both when loading lists and when checking
+domains.
 A few list URLs are included in the examples directory.
 Googling will yield more results. You should avoid any lists that are not updated frequently.
 

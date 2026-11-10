@@ -51,7 +51,8 @@ func main() {
 		Logger:        logger,
 
 		// You can optionally provide your own HTTP client to use for downloading databases.
-		// By default, it uses a client with a 10-second timeout.
+		// By default, it uses a client with a timeout of domaindb.DefaultHttpTimeout per download
+		// and domaindb.DefaultHttpResponseHeaderTimeout for receiving response headers.
 		HttpClient: nil,
 
 		// You can set this to true to disable downloading databases.
@@ -59,9 +60,9 @@ func main() {
 		// Keep in mind that if there is no cached database available, it will return an error.
 		DisableDownload: false,
 
-		// You can set this to true to do most of the initialization in the background.
-		// This is useful if you're developing and don't want database loading to block startup.
-		// It is NOT recommended for production.
+		// You can set this to true to load databases in the background instead of blocking startup.
+		// This is meant for speeding up startup during development, and is unsuitable for production:
+		// if loading fails, the error is only logged and the DomainDb instance is closed.
 		// See documentation on this field for more details.
 		LoadDatabasesInBackground: false,
 

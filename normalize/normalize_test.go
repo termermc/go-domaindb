@@ -11,7 +11,7 @@ func newN() *DomainNormalizer {
 // Helper to build a repeated character string.
 func makeStr(ch rune, n int) string {
 	b := make([]rune, n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		b[i] = ch
 	}
 	return string(b)
